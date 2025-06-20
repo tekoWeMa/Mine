@@ -5,8 +5,8 @@ services:
       dockerfile: Dockerfile
       context: .
     environment:
-      - DISCORD_CLIENT_TOKEN
-      - DB_HOST
-      - DB_USERNAME
-      - DB_PASSWORD
+      - DISCORD_CLIENT_TOKEN_MINE
+      - DB_HOST_MINE
+      - DB_USERNAME_MINE
+      - DB_PASSWORD_MINE
     restart: always

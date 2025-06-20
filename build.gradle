@@ -18,3 +18,19 @@ dependencies {
 test {
     useJUnitPlatform()
 }
+
+tasks.register('customFatJar', Jar) {
+    dependsOn configurations.runtimeClasspath
+    archiveBaseName.set('mine')
+    archiveVersion.set('1.0-SNAPSHOT')
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    manifest {
+        attributes 'Main-Class': 'ch.kirby.Mine'
+    }
+
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    with jar
+}
