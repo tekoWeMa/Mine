@@ -4,16 +4,16 @@ import ch.kirby.core.command.Command;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import reactor.core.publisher.Mono;
 
-public class PingCommand implements Command {
+public class StatsCommand implements Command {
     @Override
     public String getName() {
-        return "ping";
+        return "stats";
     }
 
     @Override
     public Mono<Void> handle(ChatInputInteractionEvent event) {
         return event.reply()
-                .withEphemeral(true)
-                .withContent("Pong!");
+                .withEphemeral(false) // Empheral is secret or not secret
+                .withContent("Will be implemented!");
     }
 }

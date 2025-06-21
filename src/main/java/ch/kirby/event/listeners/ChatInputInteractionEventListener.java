@@ -1,6 +1,7 @@
 package ch.kirby.event.listeners;
 
 import ch.kirby.commands.PingCommand;
+import ch.kirby.commands.StatsCommand;
 import ch.kirby.core.command.Command;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import reactor.core.publisher.Flux;
@@ -15,6 +16,7 @@ public class ChatInputInteractionEventListener {
 
     static {
         commands.add(new PingCommand());
+        commands.add(new StatsCommand());
     }
 
     public static Mono<Void> handle(ChatInputInteractionEvent event) {
