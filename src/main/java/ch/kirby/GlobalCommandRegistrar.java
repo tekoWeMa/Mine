@@ -3,6 +3,8 @@ package ch.kirby;
 import discord4j.common.JacksonResources;
 import discord4j.discordjson.json.ApplicationCommandRequest;
 import discord4j.rest.RestClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 //import org.slf4j.Logger;
 //import org.slf4j.LoggerFactory;
 
@@ -17,7 +19,7 @@ import java.util.stream.Collectors;
 
 public class GlobalCommandRegistrar {
     private static final String commandsFolderName = "commands/";
-//    private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
+    private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
     private final RestClient restClient;
 
     public GlobalCommandRegistrar(RestClient restClient) {
@@ -60,8 +62,8 @@ public class GlobalCommandRegistrar {
             commands.add(request);        }
 
         applicationService.bulkOverwriteGlobalApplicationCommand(applicationId, commands)
-//                .doOnNext(cmd -> LOGGER.debug("Successfully registered Global Command " + cmd.name()))
-//                .doOnError(e -> LOGGER.error("Failed to register global commands", e))
+                .doOnNext(cmd -> LOGGER.debug("Successfully registered Global Command " + cmd.name()))
+                .doOnError(e -> LOGGER.error("Failed to register global commands", e))
                 .subscribe();
     }
 }

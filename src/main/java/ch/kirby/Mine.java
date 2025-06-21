@@ -6,12 +6,14 @@ import discord4j.core.DiscordClientBuilder;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.event.domain.message.MessageCreateEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.List;
 
 
 public class Mine {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Mine.class);
     public static void main(final String[] args) {
         final var token = System.getenv("DISCORD_CLIENT_TOKEN_MINE");
         final GatewayDiscordClient client = DiscordClientBuilder.create(token).build().login().block();
@@ -19,12 +21,13 @@ public class Mine {
         List<String> commands = List.of("ping.json", "stats.json");
         try {
             new GlobalCommandRegistrar(client.getRestClient()).registerCommands(commands);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
-//        catch (Exception e) {
-//            LOGGER.error("Error trying to register global slash commands", e);
+//        catch (IOException e) {
+//            throw new RuntimeException(e);
 //        }
+        catch (Exception e) {
+            LOGGER.error("Error trying to register global slash commands", e);
+        }
 
         client.on(ChatInputInteractionEvent.class, ChatInputInteractionEventListener::handle)
                 .then(client.onDisconnect())
