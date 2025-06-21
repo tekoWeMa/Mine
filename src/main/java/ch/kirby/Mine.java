@@ -1,43 +1,38 @@
 package ch.kirby;
 
+import ch.kirby.event.listeners.ChatInputInteractionEventListener;
+import ch.kirby.event.listeners.MessageCreateEventListener;
 import discord4j.core.DiscordClientBuilder;
 import discord4j.core.GatewayDiscordClient;
+import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.event.domain.message.MessageCreateEvent;
-import reactor.core.publisher.Mono;
+
+import java.io.IOException;
+import java.util.List;
+
 
 public class Mine {
     public static void main(final String[] args) {
-        final String token = System.getenv("DISCORD_CLIENT_TOKEN_MINE");
+        final var token = System.getenv("DISCORD_CLIENT_TOKEN_MINE");
+        final GatewayDiscordClient client = DiscordClientBuilder.create(token).build().login().block();
 
-        if (token == null || token.isBlank()) {
-            System.out.println("DISCORD_CLIENT_TOKEN_MINE is not set or is blank.");
-            return;
+        List<String> commands = List.of("ping.json");
+        try {
+            new GlobalCommandRegistrar(client.getRestClient()).registerCommands(commands);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
+//        catch (Exception e) {
+//            LOGGER.error("Error trying to register global slash commands", e);
+//        }
 
-        final GatewayDiscordClient client = DiscordClientBuilder.create(token)
-                .build()
-                .login()
-                .block();
+        client.on(ChatInputInteractionEvent.class, ChatInputInteractionEventListener::handle)
+                .then(client.onDisconnect())
+                .subscribe();
+        client.on(MessageCreateEvent.class, MessageCreateEventListener::handle)
+                .then(client.onDisconnect())
+                .subscribe();
 
-        if (client == null) {
-            System.out.println("Login failed. Check your token.");
-            return;
-        }
-
-        // Register event handler for message create
-        client.on(MessageCreateEvent.class, event -> {
-            final var message = event.getMessage();
-
-            if ("!ping".equalsIgnoreCase(message.getContent())) {
-                return message.getChannel()
-                        .flatMap(channel -> channel.createMessage("Pong!"))
-                        .then();
-            }
-
-            return Mono.empty();
-        }).subscribe();
-
-        // Keep bot alive
         client.onDisconnect().block();
     }
 }
