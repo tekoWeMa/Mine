@@ -9,6 +9,7 @@ import discord4j.core.event.domain.message.MessageCreateEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.List;
 
 
@@ -22,9 +23,9 @@ public class Mine {
         try {
             new GlobalCommandRegistrar(client.getRestClient()).registerCommands(commands);
         }
-//        catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         catch (Exception e) {
             LOGGER.error("Error trying to register global slash commands", e);
         }

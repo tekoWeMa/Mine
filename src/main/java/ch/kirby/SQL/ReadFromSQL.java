@@ -5,7 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class ReadFromSQL {
+public class ReadFromSQL implements AutoCloseable {
 
     private Connection connection;
 
@@ -13,7 +13,7 @@ public class ReadFromSQL {
         this.connection = connection;
     }
     /**
-     * Example method: count the total rows in 'your_table'.
+     * Example method: count the total rows in 'User'.
      * @return a human-readable String of the row count.
      * @throws SQLException if something goes wrong with the query.
      */
@@ -31,4 +31,8 @@ public class ReadFromSQL {
         }
     }
 
+    @Override
+    public void close() throws Exception {
+
+    }
 }

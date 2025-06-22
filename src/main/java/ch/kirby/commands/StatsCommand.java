@@ -5,9 +5,9 @@ import ch.kirby.SQL.ReadFromSQL;
 import ch.kirby.core.command.Command;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 
 public class StatsCommand implements Command {
     @Override
@@ -17,21 +17,26 @@ public class StatsCommand implements Command {
 
     @Override
     public Mono<Void> handle(ChatInputInteractionEvent event) {
-        // 1) Run your blocking JDBC code right here
-        String replyContent;
-        try {
-            DBConnection dbConnection = new DBConnection();
-            Connection conn = dbConnection.SQLDBConnection();
-            ReadFromSQL reader = new ReadFromSQL(conn);
-            replyContent = reader.readStats();
-            conn.close();
-        } catch (SQLException e) {
-            replyContent = "⚠️ Error fetching stats: " + e.getMessage();
-        }
-
-        // 2) Send the reply immediately
-        return event.reply()
-                .withEphemeral(false)
-                .withContent(replyContent);
+        // 1) Tell Discord we need more time
+        return event.deferReply()
+                // 2) Offload blocking DB call onto boundedElastic
+                .then(Mono.fromCallable(() -> {
+                                    try (
+                                            // open your JDBC connection
+                                            Connection conn = new DBConnection().SQLDBConnection();
+                                            // wrap it in helper
+                                            ReadFromSQL reader = new ReadFromSQL(conn)
+                                    ) {
+                                        // run the query
+                                        return reader.readStats();
+                                    } catch (Exception e) {
+                                        // return an error message instead of throwing
+                                        return "⚠️ Error reading stats: " + e.getMessage();
+                                    }
+                                })
+                                .subscribeOn(Schedulers.boundedElastic())
+                                // 3) once complete, edit the deferred reply with the result
+                                .flatMap(event::editReply)
+                ).then();
     }
 }

@@ -5,8 +5,6 @@ import discord4j.discordjson.json.ApplicationCommandRequest;
 import discord4j.rest.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-//import org.slf4j.Logger;
-//import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
