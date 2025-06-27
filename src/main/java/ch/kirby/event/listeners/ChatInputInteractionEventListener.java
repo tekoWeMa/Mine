@@ -1,5 +1,6 @@
 package ch.kirby.event.listeners;
 
+import ch.kirby.commands.LeaderboardCommand;
 import ch.kirby.commands.PingCommand;
 import ch.kirby.commands.StatsCommand;
 import ch.kirby.core.command.Command;
@@ -17,6 +18,7 @@ public class ChatInputInteractionEventListener {
     static {
         commands.add(new PingCommand());
         commands.add(new StatsCommand());
+        commands.add(new LeaderboardCommand());
     }
 
     public static Mono<Void> handle(ChatInputInteractionEvent event) {

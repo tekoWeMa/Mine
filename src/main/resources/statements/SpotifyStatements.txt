@@ -1,0 +1,84 @@
+SpotifyDashboard:
+
+TotalHoursListened:
+
+SELECT
+    U.username,
+    App.name,
+    ROUND(SUM(TIMESTAMPDIFF(SECOND, A.starttime, COALESCE(A.endtime, NOW()))) / 3600, 2) AS total_hours_played,
+    $Gamename
+FROM
+    Activity A
+JOIN
+    User U ON A.auto_user_id = U.auto_user_id
+JOIN
+    Type T ON A.auto_type_id = T.auto_type_id
+JOIN
+    Application App ON A.auto_app_id = App.auto_app_id
+WHERE
+    T.type = 'listening'
+    AND $__timeFilter(A.starttime)
+    AND App.name IN (${Gamename:sqlstring})
+GROUP BY
+    U.username, App.name
+ORDER BY
+    username DESC
+
+
+
+SongByUser:
+
+SELECT
+    U.username,
+    ROUND(SUM(TIMESTAMPDIFF(SECOND, A.starttime, COALESCE(A.endtime, NOW()))) / 60, 2) AS total_minutes_played,
+    AppS.details
+FROM
+    Activity A
+JOIN
+    User U ON A.auto_user_id = U.auto_user_id
+JOIN
+    Type T ON A.auto_type_id = T.auto_type_id
+JOIN
+    Application App ON A.auto_app_id = App.auto_app_id
+JOIN
+    AppState AppS ON A.auto_app_state_id = AppS.auto_app_state_id
+WHERE
+    T.type = 'listening'
+    AND endtime IS NOT NULL
+    AND $__timeFilter(A.starttime)
+    AND U.username IN (${Username:sqlstring})
+    AND AppS.state IN (${Artist:sqlstring})
+    AND AppS.details IN (${SongTitle:sqlstring})
+    GROUP BY
+    AppS.details, U.username
+ORDER BY
+    total_minutes_played DESC
+
+
+ArtistListenedByUser:
+
+SELECT
+    U.username,
+    ROUND(SUM(TIMESTAMPDIFF(SECOND, A.starttime, COALESCE(A.endtime, NOW()))) / 60, 2) AS total_minutes_played,
+    AppS.state
+FROM
+    Activity A
+JOIN
+    User U ON A.auto_user_id = U.auto_user_id
+JOIN
+    Type T ON A.auto_type_id = T.auto_type_id
+JOIN
+    Application App ON A.auto_app_id = App.auto_app_id
+JOIN
+    AppState AppS ON A.auto_app_state_id = AppS.auto_app_state_id
+WHERE
+    T.type = 'listening'
+    AND endtime IS NOT NULL
+    AND $__timeFilter(A.starttime)
+    AND U.username IN (${Username:sqlstring})
+    AND AppS.state IN (${Artist:sqlstring})
+    AND AppS.details IN (${SongTitle:sqlstring})
+GROUP BY
+    AppS.state, U.username
+ORDER BY
+    total_minutes_played DESC

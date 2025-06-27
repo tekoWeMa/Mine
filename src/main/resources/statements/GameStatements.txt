@@ -1,0 +1,26 @@
+GameStatements:
+
+TotalHoursPlayed:
+
+
+SELECT
+    U.username,
+    App.name,
+    ROUND(SUM(TIMESTAMPDIFF(SECOND, A.starttime, COALESCE(A.endtime, NOW()))) / 3600, 2) AS total_hours_played
+FROM
+    Activity A
+JOIN
+    User U ON A.auto_user_id = U.auto_user_id
+JOIN
+    Type T ON A.auto_type_id = T.auto_type_id
+JOIN
+    Application App ON A.auto_app_id = App.auto_app_id
+WHERE
+    T.type = 'playing'
+    AND $__timeFilter(A.starttime)
+    AND App.name IN (${Gamename:sqlstring})
+    AND U.username IN (${Username:sqlstring})
+GROUP BY
+    U.username, App.name
+ORDER BY
+    U.username DESC

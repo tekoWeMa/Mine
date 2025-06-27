@@ -5,6 +5,7 @@ import ch.kirby.repository.StatsRepository;
 import discord4j.core.object.entity.User;
 
 import java.sql.Connection;
+import java.util.List;
 
 public class StatsService {
 
@@ -18,4 +19,13 @@ public class StatsService {
         String username = (target != null) ? target.getUsername() : commandUser.getUsername();
         return repo.getStatsForUser(username, dayspan);
     }
+
+    public List<GameStats> getGameLeaderboard(String game, int dayspan) {
+        return repo.fetchGameLeaderboard(game, dayspan);
+    }
+
+    public List<GameStats> getSpotifyLeaderboard(int dayspan) {
+        return repo.fetchSpotifyLeaderboard(dayspan);
+    }
+
 }
