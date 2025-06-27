@@ -49,15 +49,15 @@ public class StatsRepository implements AutoCloseable {
             ps.setString(2, username);
 
             try (ResultSet rs = ps.executeQuery()) {
-                Map<String, Integer> breakdown = new LinkedHashMap<>();
+                Map<String, Double> breakdown = new LinkedHashMap<>();
                 double total = 0.0;
                 while (rs.next()) {
                     String game = rs.getString("App.name");
                     double hours = rs.getDouble("total_hours_played");
-                    breakdown.put(game, (int) Math.round(hours));
+                    breakdown.put(game, hours);
                     total += hours;
                 }
-                return new GameStats(username, (int) Math.round(total), breakdown);
+                return new GameStats(username, total, breakdown);
             }
         }
     }

@@ -11,10 +11,10 @@ import ch.kirby.model.SpotifyStats;
 
 public class SharedFormatter {
 
-    public static String formatBreakdown(Map<String, Integer> breakdown) {
+    public static String formatBreakdown(Map<String, Double> breakdown) {
         StringBuilder sb = new StringBuilder();
         breakdown.entrySet().stream()
-                .sorted((a, b) -> Integer.compare(b.getValue(), a.getValue())) // Optional: sort descending
+                .sorted((a, b) -> Double.compare(b.getValue(), a.getValue()))
                 .forEach(entry -> {
                     String game = entry.getKey();
                     double hours = entry.getValue();
