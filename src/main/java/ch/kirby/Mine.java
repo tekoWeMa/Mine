@@ -21,7 +21,11 @@ public class Mine {
         final var token = System.getenv("DISCORD_CLIENT_TOKEN_MINE");
         final GatewayDiscordClient client = DiscordClientBuilder.create(token).build().login().block();
 
-        List<String> commands = List.of("ping.json", "stats.json", "leaderboard.json", "spotify.json");  //TODO Use Folder
+        List<String> commands = List.of(
+                "ping.json",
+                "stats.json",
+                "leaderboard.json",
+                "spotify.json");
         try {
             new GlobalCommandRegistrar(client.getRestClient()).registerCommands(commands);
         }
