@@ -2,6 +2,7 @@ package ch.kirby.event.listeners;
 
 import ch.kirby.commands.LeaderboardCommand;
 import ch.kirby.commands.PingCommand;
+import ch.kirby.commands.SpotifyCommand;
 import ch.kirby.commands.StatsCommand;
 import ch.kirby.core.command.Command;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
@@ -19,6 +20,7 @@ public class ChatInputInteractionEventListener {
         commands.add(new PingCommand());
         commands.add(new StatsCommand());
         commands.add(new LeaderboardCommand());
+        commands.add(new SpotifyCommand());
     }
 
     public static Mono<Void> handle(ChatInputInteractionEvent event) {

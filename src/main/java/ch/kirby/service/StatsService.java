@@ -7,6 +7,9 @@ import discord4j.core.object.entity.User;
 import java.sql.Connection;
 import java.util.List;
 
+import ch.kirby.model.SpotifyStats;
+
+
 public class StatsService {
 
     private final StatsRepository repo;
@@ -27,5 +30,14 @@ public class StatsService {
     public List<GameStats> getSpotifyLeaderboard(int dayspan) {
         return repo.fetchSpotifyLeaderboard(dayspan);
     }
+
+    public List<SpotifyStats> getTopSongsForUser(String username, int dayspan) {
+        return repo.getTopSongsForUser(username, dayspan);
+    }
+
+    public List<SpotifyStats> getTopArtistsForUser(String username, int dayspan) {
+        return repo.getTopArtistsForUser(username, dayspan);
+    }
+
 
 }
