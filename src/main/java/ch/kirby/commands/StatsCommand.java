@@ -4,8 +4,11 @@ import ch.kirby.SQL.DBConnection;
 import ch.kirby.model.GameStats;
 import ch.kirby.service.StatsService;
 import ch.kirby.core.command.Command;
+import ch.kirby.util.SharedFormatter;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.object.entity.User;
+import discord4j.core.spec.EmbedCreateSpec;
+import discord4j.core.spec.InteractionFollowupCreateSpec;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
@@ -36,19 +39,24 @@ public class StatsCommand implements Command {
                         StatsService service = new StatsService(conn);
                         GameStats stats = service.getStats(commandUser, targetUser, dayspan);
 
-                        StringBuilder sb = new StringBuilder("\uD83D\uDCCA Stats for **" + stats.getUsername() + "** in last " + dayspan + " days:\n");
-                        sb.append("Total hours: ").append(stats.getTotalHours()).append("\n");
-                        stats.getGameBreakdown().forEach((game, hrs) -> {
-                            sb.append("• ").append(game).append(": ").append(hrs).append("h\n");
-                        });
+                        EmbedCreateSpec embed = EmbedCreateSpec.builder()
+                                .title("Stats for " + stats.getUsername())
+                                .description("Total playtime over the last " + dayspan + " days.")
+                                .addField("Total Hours", stats.getTotalHours() + "h", false)
+                                .addField("Breakdown", SharedFormatter.formatBreakdown(stats.getGameBreakdown()), false)
+                                .build();
 
-                        return sb.toString();
+                        return InteractionFollowupCreateSpec.builder()
+                                .addEmbed(embed)
+                                .build();
 
                     } catch (Exception e) {
-                        return "\u26A0\uFE0F Error: " + e.getMessage();
+                        return InteractionFollowupCreateSpec.builder()
+                                .content("⚠️ Error: " + e.getMessage())
+                                .build();
                     }
                 }).subscribeOn(Schedulers.boundedElastic()))
-                .flatMap(result -> event.createFollowup().withContent(result))
+                .flatMap(event::createFollowup)
                 .then();
     }
 }
