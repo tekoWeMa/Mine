@@ -23,6 +23,10 @@ public class StatsService {
         return repo.getStatsForUser(username, dayspan);
     }
 
+    public GameStats getStats(String username, int dayspan) throws Exception {
+        return repo.getStatsForUser(username, dayspan);
+    }
+
     public List<GameStats> getGameLeaderboard(String game, int dayspan) {
         return repo.fetchGameLeaderboard(game, dayspan);
     }

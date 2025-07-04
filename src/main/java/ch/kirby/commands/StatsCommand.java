@@ -6,13 +6,19 @@ import ch.kirby.service.StatsService;
 import ch.kirby.core.command.Command;
 import ch.kirby.util.SharedFormatter;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
+import discord4j.core.object.component.ActionRow;
+import discord4j.core.object.component.Button;
 import discord4j.core.object.entity.User;
 import discord4j.core.spec.EmbedCreateSpec;
+import discord4j.core.spec.InteractionApplicationCommandCallbackSpec;
 import discord4j.core.spec.InteractionFollowupCreateSpec;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.sql.Connection;
+
+import static ch.kirby.util.SharedFormatter.defaultStatsComponents;
+import static ch.kirby.util.SharedFormatter.defaultStatsEmbed;
 
 public class StatsCommand implements Command {
 
@@ -39,15 +45,9 @@ public class StatsCommand implements Command {
                         StatsService service = new StatsService(conn);
                         GameStats stats = service.getStats(commandUser, targetUser, dayspan);
 
-                        EmbedCreateSpec embed = EmbedCreateSpec.builder()
-                                .title("Stats for " + stats.getUsername())
-                                .description("Total playtime over the last " + dayspan + " days.")
-                                .addField("Total Hours", stats.getTotalHours() + "h", false)
-                                .addField("Breakdown", SharedFormatter.formatBreakdown(stats.getGameBreakdown()), false)
-                                .build();
-
                         return InteractionFollowupCreateSpec.builder()
-                                .addEmbed(embed)
+                                .addEmbed(defaultStatsEmbed(stats, dayspan).getFirst())
+                                .addComponent(defaultStatsComponents(dayspan))
                                 .build();
 
                     } catch (Exception e) {
