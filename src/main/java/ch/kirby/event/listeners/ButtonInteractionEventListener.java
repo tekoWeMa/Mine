@@ -27,11 +27,15 @@ public class ButtonInteractionEventListener {
 
                     var parts = event.getCustomId().split("_");
                     var part = parts[parts.length - 1];
-                    var dayspan = Integer.parseInt(part);  // This can panic but we dont care right now!
+                    var dayspan = Integer.parseInt(part);  // This can panic but we don't care right now!
+
+                    var embed = message.getEmbeds().get(0);
+                    var title = embed.getTitle().orElse("");
+                    var requestedUsername = title.replace("Stats for ", "").trim();
 
                     GameStats stats = null;
                     try {
-                        stats = getStats(event, dayspan);
+                        stats = getStats(requestedUsername, dayspan);
                     } catch (SQLException e) {
                         throw new RuntimeException(e);
                     }
@@ -42,17 +46,15 @@ public class ButtonInteractionEventListener {
                             .build();
                     return message.edit(messageEditSpec).then();
                 }
-        ).get()
-        );
+        ).get());
 
         return event.deferEdit().timeout(Duration.ofMinutes(5)).then(Mono.defer(() -> inner)).then();
     }
 
-    private static GameStats getStats(ButtonInteractionEvent event, int dayspan) throws SQLException {
+    private static GameStats getStats(String username, int dayspan) throws SQLException {
         try (Connection conn = new DBConnection().SQLDBConnection()) {
             StatsService service = new StatsService(conn);
-            User commandUser = event.getInteraction().getUser();
-            return service.getStats(commandUser.getUsername(), dayspan);
+            return service.getStats(username, dayspan);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
