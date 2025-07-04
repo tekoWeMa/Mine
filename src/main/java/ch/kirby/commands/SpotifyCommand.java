@@ -15,6 +15,8 @@ import reactor.core.scheduler.Schedulers;
 import java.sql.Connection;
 import java.util.List;
 
+import static ch.kirby.util.SharedFormatter.defaultStatsComponents;
+
 public class SpotifyCommand implements Command {
 
     @Override
@@ -45,8 +47,13 @@ public class SpotifyCommand implements Command {
                         List<SpotifyStats> topSongs = service.getTopSongsForUser(username, dayspan);
                         List<SpotifyStats> topArtists = service.getTopArtistsForUser(username, dayspan);
 
+                        String commandPrefix = "spotify";
+
                         EmbedCreateSpec embed = SharedFormatter.formatSpotifyStats(username, topSongs, topArtists, dayspan);
-                        return InteractionFollowupCreateSpec.builder().addEmbed(embed).build();
+                        return InteractionFollowupCreateSpec.builder()
+                                .addEmbed(embed)
+                                .addComponent(defaultStatsComponents(commandPrefix, dayspan))
+                                .build();
                     }
                 }).subscribeOn(Schedulers.boundedElastic()))
                 .flatMap(event::createFollowup).then();

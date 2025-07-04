@@ -44,10 +44,11 @@ public class StatsCommand implements Command {
 
                         StatsService service = new StatsService(conn);
                         GameStats stats = service.getStats(commandUser, targetUser, dayspan);
+                        String commandPrefix = "stats";
 
                         return InteractionFollowupCreateSpec.builder()
                                 .addEmbed(defaultStatsEmbed(stats, dayspan).getFirst())
-                                .addComponent(defaultStatsComponents(dayspan))
+                                .addComponent(defaultStatsComponents(commandPrefix, dayspan))
                                 .build();
 
                     } catch (Exception e) {

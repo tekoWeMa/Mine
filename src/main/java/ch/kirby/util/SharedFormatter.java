@@ -1,6 +1,7 @@
 package ch.kirby.util;
 
 import ch.kirby.model.GameStats;
+import discord4j.core.object.component.ActionComponent;
 import discord4j.core.object.component.ActionRow;
 import discord4j.core.object.component.Button;
 import discord4j.core.spec.EmbedCreateSpec;
@@ -89,17 +90,19 @@ public class SharedFormatter {
         return specs;
     }
 
-    public static ActionRow defaultStatsComponents(int dayspan) {
+    public static ActionRow defaultStatsComponents(String commandPrefix, int dayspan) {
         return ActionRow.of(
-                styleButton(7, dayspan),
-                styleButton(14, dayspan),
-                styleButton(30, dayspan)
+                styleButton(commandPrefix, 7, dayspan),
+                styleButton(commandPrefix, 14, dayspan),
+                styleButton(commandPrefix, 30, dayspan)
         );
     }
 
-    private static Button styleButton(int value, int selected) {
+
+    private static Button styleButton(String commandPrefix, int value, int selected) {
         String label = value + " Days";
-        String id = "stats_dayspan_" + value;
+        String id = commandPrefix +"_dayspan_" + value;
+
         return (value == selected)
                 ? Button.primary(id, label)
                 : Button.secondary(id, label);

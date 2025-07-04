@@ -14,6 +14,8 @@ import reactor.core.scheduler.Schedulers;
 import java.sql.Connection;
 import java.util.List;
 
+import static ch.kirby.util.SharedFormatter.defaultStatsComponents;
+
 public class LeaderboardCommand implements Command {
 
     @Override
@@ -41,9 +43,12 @@ public class LeaderboardCommand implements Command {
                         List<GameStats> leaderboard = "spotify".equalsIgnoreCase(game)
                                 ? service.getSpotifyLeaderboard(dayspan)
                                 : service.getGameLeaderboard(game, dayspan);
-
+                        String commandPrefix = "leaderboard";
                         EmbedCreateSpec embed = SharedFormatter.formatLeaderboard(leaderboard, game, dayspan);
-                        return InteractionFollowupCreateSpec.builder().addEmbed(embed).build();
+                        return InteractionFollowupCreateSpec.builder()
+                                .addEmbed(embed)
+                                .addComponent(defaultStatsComponents(commandPrefix, dayspan))
+                                .build();
                     }
                 }).subscribeOn(Schedulers.boundedElastic()))
                 .flatMap(event::createFollowup).then();
