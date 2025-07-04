@@ -47,7 +47,7 @@ public class LeaderboardCommand implements Command {
                         EmbedCreateSpec embed = SharedFormatter.formatLeaderboard(leaderboard, game, dayspan);
                         return InteractionFollowupCreateSpec.builder()
                                 .addEmbed(embed)
-                                .addComponent(defaultStatsComponents(commandPrefix, dayspan))
+//                                .addComponent(defaultStatsComponents(commandPrefix, dayspan))
                                 .build();
                     }
                 }).subscribeOn(Schedulers.boundedElastic()))

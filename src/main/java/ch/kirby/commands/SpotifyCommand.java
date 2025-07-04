@@ -52,7 +52,7 @@ public class SpotifyCommand implements Command {
                         EmbedCreateSpec embed = SharedFormatter.formatSpotifyStats(username, topSongs, topArtists, dayspan);
                         return InteractionFollowupCreateSpec.builder()
                                 .addEmbed(embed)
-                                .addComponent(defaultStatsComponents(commandPrefix, dayspan))
+//                                .addComponent(defaultStatsComponents(commandPrefix, dayspan))
                                 .build();
                     }
                 }).subscribeOn(Schedulers.boundedElastic()))

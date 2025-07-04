@@ -38,8 +38,8 @@ public class ButtonInteractionEventListener {
 
         Mono<Void> inner = switch (commandPrefix) {
             case "stats" -> handleStatsDayspan(event, dayspan);
-//            case "leaderboard" -> handleLeaderboardDayspan(event, dayspan); TODO comment in when i have working version
-//            case "spotify" -> handleSpotifyDayspan(event, dayspan); TODO comment in when i have working version
+//            case "leaderboard" -> handleLeaderboardDayspan(event, dayspan);TODO Implement Leaderboarddayspan
+//            case "spotify" -> handleSpotifyDayspan(event, dayspan); TODO Implement SpotifyDayspan
             default -> event.reply("Unsupported command: " + commandPrefix).withEphemeral(true);
         };
 
@@ -67,7 +67,6 @@ public class ButtonInteractionEventListener {
             return message.edit(messageEditSpec).then();
         }).get());
     }
-
 //    private static Mono<Void> handleLeaderboardDayspan(ButtonInteractionEvent event, int dayspan) {
 //       TODO
 //    }
@@ -84,4 +83,6 @@ public class ButtonInteractionEventListener {
             throw new RuntimeException(e);
         }
     }
+
+
 }
