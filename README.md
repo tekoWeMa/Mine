@@ -63,8 +63,8 @@ services:
   bot:
     build: .
     environment:
-      - DISCORD_CLIENT_TOKEN_MINE=your-discord-token
-      - DB_HOST_MINE=mariadb
-      - DB_USERNAME_MINE=sugu
-      - DB_PASSWORD_MINE=yourpassword
+      - DISCORD_CLIENT_TOKEN_MINE
+      - DB_HOST_MINE
+      - DB_USERNAME_MINE
+      - DB_PASSWORD_MINE
     restart: unless-stopped
