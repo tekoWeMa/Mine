@@ -1,8 +1,12 @@
 package ch.kirby.util;
 
 import ch.kirby.model.GameStats;
+import discord4j.core.object.component.ActionComponent;
+import discord4j.core.object.component.ActionRow;
+import discord4j.core.object.component.Button;
 import discord4j.core.spec.EmbedCreateSpec;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -73,6 +77,34 @@ public class SharedFormatter {
         return (text.length() <= maxLength) ? text : text.substring(0, maxLength - 1) + "…";
     }
 
+    public static List<EmbedCreateSpec> defaultStatsEmbed(GameStats stats, int dayspan) {
+        List<EmbedCreateSpec> specs = new ArrayList<>();
+        specs.add(
+                EmbedCreateSpec.builder()
+                        .title("Stats for " + stats.getUsername())
+                        .description("Total playtime over the last " + dayspan + " days.")
+                        .addField("Total Hours", stats.getTotalHours() + "h", false)
+                        .addField("Breakdown", SharedFormatter.formatBreakdown(stats.getGameBreakdown()), false)
+                        .build()
+        );
+        return specs;
+    }
+
+    public static ActionRow defaultStatsComponents(String commandPrefix, int dayspan) {
+        return ActionRow.of(
+                styleButton(commandPrefix, 7, dayspan),
+                styleButton(commandPrefix, 14, dayspan),
+                styleButton(commandPrefix, 30, dayspan)
+        );
+    }
 
 
+    private static Button styleButton(String commandPrefix, int value, int selected) {
+        String label = value + " Days";
+        String id = commandPrefix +"_dayspan_" + value;
+
+        return (value == selected)
+                ? Button.primary(id, label)
+                : Button.secondary(id, label);
+    }
 }

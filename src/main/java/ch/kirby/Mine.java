@@ -1,5 +1,6 @@
 package ch.kirby;
 
+import ch.kirby.event.listeners.ButtonInteractionEventListener;
 import ch.kirby.event.listeners.ChatInputInteractionEventListener;
 import ch.kirby.event.listeners.MessageCreateEventListener;
 import discord4j.core.DiscordClientBuilder;
@@ -40,6 +41,9 @@ public class Mine {
                 .then(client.onDisconnect())
                 .subscribe();
         client.on(MessageCreateEvent.class, MessageCreateEventListener::handle)
+                .then(client.onDisconnect())
+                .subscribe();
+        client.on(ButtonInteractionEvent.class, ButtonInteractionEventListener::handle)
                 .then(client.onDisconnect())
                 .subscribe();
 
