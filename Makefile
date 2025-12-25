@@ -4,8 +4,8 @@ CONTAINER			:= docker
 CONTAINER_COMPOSE	:= $(CONTAINER) compose
 
 CONTAINER_TAG			:= mine
-CONTAINER_TAG_VERSION	:= latest
-CONTAINER_TAG_NAME		:= $(CONTAINER_TAG):$(CONTAINER_TAG_VERSION)
+VERSION					?= latest
+CONTAINER_TAG_NAME		:= $(CONTAINER_TAG):$(VERSION)
 
 PHONY: build
 build: docker-compose-build
@@ -38,8 +38,16 @@ push: build docker-tag docker-push
 docker-tag:
 	@echo "Tagging image as $(DOCKERHUB_USER)/$(CONTAINER_TAG_NAME)"
 	docker tag $(CONTAINER_TAG_NAME) $(DOCKERHUB_USER)/$(CONTAINER_TAG_NAME)
+ifneq ($(VERSION),latest)
+	@echo "Tagging image as $(DOCKERHUB_USER)/$(CONTAINER_TAG):latest"
+	docker tag $(CONTAINER_TAG_NAME) $(DOCKERHUB_USER)/$(CONTAINER_TAG):latest
+endif
 
 .PHONY: docker-push
 docker-push:
 	@echo "Pushing $(DOCKERHUB_USER)/$(CONTAINER_TAG_NAME) to Docker Hub"
 	docker push $(DOCKERHUB_USER)/$(CONTAINER_TAG_NAME)
+ifneq ($(VERSION),latest)
+	@echo "Pushing $(DOCKERHUB_USER)/$(CONTAINER_TAG):latest to Docker Hub"
+	docker push $(DOCKERHUB_USER)/$(CONTAINER_TAG):latest
+endif

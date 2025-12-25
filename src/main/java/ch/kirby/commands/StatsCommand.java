@@ -1,26 +1,26 @@
 package ch.kirby.commands;
 
 import ch.kirby.SQL.DBConnection;
+import ch.kirby.core.command.ButtonHandler;
 import ch.kirby.model.GameStats;
 import ch.kirby.service.StatsService;
 import ch.kirby.core.command.Command;
-import ch.kirby.util.SharedFormatter;
+import discord4j.core.event.domain.interaction.ButtonInteractionEvent;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
-import discord4j.core.object.component.ActionRow;
-import discord4j.core.object.component.Button;
 import discord4j.core.object.entity.User;
-import discord4j.core.spec.EmbedCreateSpec;
-import discord4j.core.spec.InteractionApplicationCommandCallbackSpec;
 import discord4j.core.spec.InteractionFollowupCreateSpec;
+import discord4j.core.spec.MessageEditSpec;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.sql.Connection;
 
-import static ch.kirby.util.SharedFormatter.defaultStatsComponents;
-import static ch.kirby.util.SharedFormatter.defaultStatsEmbed;
+import java.util.List;
 
-public class StatsCommand implements Command {
+import static ch.kirby.util.SharedFormatter.*;
+
+
+public class StatsCommand implements Command, ButtonHandler {
 
     @Override
     public String getName() {
@@ -47,7 +47,7 @@ public class StatsCommand implements Command {
                         String commandPrefix = "stats";
 
                         return InteractionFollowupCreateSpec.builder()
-                                .addEmbed(defaultStatsEmbed(stats, dayspan).getFirst())
+                                .addEmbed(defaultStatsEmbed(stats, dayspan).get(0))
                                 .addComponent(defaultStatsComponents(commandPrefix, dayspan))
                                 .build();
 
@@ -59,5 +59,41 @@ public class StatsCommand implements Command {
                 }).subscribeOn(Schedulers.boundedElastic()))
                 .flatMap(event::createFollowup)
                 .then();
+    }
+
+    @Override
+    public String getCommandPrefix() {
+        return "stats";
+    }
+
+    @Override
+    public Mono<Void> handleButton(ButtonInteractionEvent event) {
+        int dayspan = Integer.parseInt(event.getCustomId().split("_")[2]);
+
+        return Mono.justOrEmpty(event.getMessage()).flatMap(message -> {
+            var embed = message.getEmbeds().get(0);
+            var title = embed.getTitle().orElse("");
+            var requestedUsername = title.replace("Stats for ", "").trim();
+
+            var loadingSpec = MessageEditSpec.builder()
+                    .embeds(List.of(loadingEmbed()))
+                    .components(List.of(disabledStatsComponents("stats", dayspan)))
+                    .build();
+
+            return message.edit(loadingSpec)
+                    .then(Mono.fromCallable(() -> {
+                        try (Connection conn = new DBConnection().SQLDBConnection()) {
+                            StatsService service = new StatsService(conn);
+                            return service.getStats(requestedUsername, dayspan);
+                        }
+                    }).subscribeOn(Schedulers.boundedElastic()))
+                    .flatMap(stats -> {
+                        var resultSpec = MessageEditSpec.builder()
+                                .embeds(defaultStatsEmbed(stats, dayspan))
+                                .components(List.of(defaultStatsComponents("stats", dayspan)))
+                                .build();
+                        return message.edit(resultSpec);
+                    });
+        }).then();
     }
 }
