@@ -98,6 +98,19 @@ public class SharedFormatter {
         );
     }
 
+    public static ActionRow disabledStatsComponents(String commandPrefix, int dayspan) {
+        return ActionRow.of(
+                styleButton(commandPrefix, 7, dayspan).disabled(),
+                styleButton(commandPrefix, 14, dayspan).disabled(),
+                styleButton(commandPrefix, 30, dayspan).disabled()
+        );
+    }
+
+    public static EmbedCreateSpec loadingEmbed() {
+        return EmbedCreateSpec.builder()
+                .description("Loading...")
+                .build();
+    }
 
     private static Button styleButton(String commandPrefix, int value, int selected) {
         String label = value + " Days";
