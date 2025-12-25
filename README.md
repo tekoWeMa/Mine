@@ -68,3 +68,68 @@ services:
       - DB_USERNAME_MINE
       - DB_PASSWORD_MINE
     restart: unless-stopped
+```
+
+---
+
+## Database Indexes
+
+The bot queries the Activity table extensively. For optimal performance, the following indexes are required on the `sugu` database.
+
+### Activity Table Indexes
+
+```sql
+-- Foreign key indexes (created by Sugu)
+CREATE INDEX auto_app_id ON Activity (auto_app_id);
+CREATE INDEX auto_user_id ON Activity (auto_user_id);
+CREATE INDEX auto_status_id ON Activity (auto_status_id);
+CREATE INDEX auto_app_state_id ON Activity (auto_app_state_id);
+
+-- Composite index for /spotify queries (listening activities)
+CREATE INDEX idx_activity_listening_lookup ON Activity (
+    auto_type_id,
+    auto_app_id,
+    auto_user_id,
+    starttime,
+    endtime,
+    auto_app_state_id
+);
+
+-- Composite index for /stats and /leaderboard queries (playing activities)
+CREATE INDEX idx_activity_playing_lookup ON Activity (
+    auto_type_id,
+    auto_user_id,
+    auto_app_id,
+    starttime
+);
+```
+
+### Lookup Table Indexes (Optional)
+
+These indexes on lookup tables can provide minor performance improvements:
+
+```sql
+-- User table: for username lookups
+CREATE INDEX idx_user_username ON User (username);
+
+-- Type table: for type lookups ('playing', 'listening')
+CREATE INDEX idx_type_type ON Type (type);
+
+-- Application table: for app name lookups ('Spotify', game names)
+CREATE INDEX idx_application_name ON Application (name);
+```
+
+### Viewing Existing Indexes
+
+To check which indexes currently exist:
+
+```sql
+-- Show all indexes for Activity table
+SHOW INDEX FROM Activity;
+
+-- Show indexes for lookup tables
+SHOW INDEX FROM User;
+SHOW INDEX FROM Type;
+SHOW INDEX FROM Application;
+SHOW INDEX FROM AppState;
+```

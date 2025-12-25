@@ -5,7 +5,6 @@ import ch.kirby.core.command.ButtonHandler;
 import ch.kirby.core.command.Command;
 import ch.kirby.model.SpotifyStats;
 import ch.kirby.service.StatsService;
-import ch.kirby.util.SharedFormatter;
 import discord4j.core.event.domain.interaction.ButtonInteractionEvent;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.object.entity.User;
@@ -30,35 +29,27 @@ public class SpotifyCommand implements Command, ButtonHandler {
     @Override
     public Mono<Void> handle(ChatInputInteractionEvent event) {
         return event.deferReply()
-                .then(Mono.fromCallable(() -> {
-                    try (Connection conn = new DBConnection().SQLDBConnection()) {
-                        User commandUser = event.getInteraction().getUser();
-                        User targetUser = event.getOption("user")
-                                .flatMap(opt -> opt.getValue().map(v -> v.asUser().block()))
-                                .orElse(null);
+                .then(Mono.defer(() -> {
+                    User commandUser = event.getInteraction().getUser();
+                    User targetUser = event.getOption("user")
+                            .flatMap(opt -> opt.getValue().map(v -> v.asUser().block()))
+                            .orElse(null);
 
-                        int dayspan = event.getOption("dayspan")
-                                .flatMap(opt -> opt.getValue())
-                                .map(v -> Integer.parseInt(v.getRaw()))
-                                .orElse(7);
+                    int dayspan = event.getOption("dayspan")
+                            .flatMap(opt -> opt.getValue())
+                            .map(v -> Integer.parseInt(v.getRaw()))
+                            .orElse(7);
 
-                        String username = (targetUser != null)
-                                ? targetUser.getUsername()
-                                : commandUser.getUsername();
+                    String username = (targetUser != null)
+                            ? targetUser.getUsername()
+                            : commandUser.getUsername();
 
-                        StatsService service = new StatsService(conn);
-                        List<SpotifyStats> topSongs = service.getTopSongsForUser(username, dayspan);
-                        List<SpotifyStats> topArtists = service.getTopArtistsForUser(username, dayspan);
-
-                        String commandPrefix = "spotify";
-
-                        EmbedCreateSpec embed = SharedFormatter.formatSpotifyStats(username, topSongs, topArtists, dayspan);
-                        return InteractionFollowupCreateSpec.builder()
-                                .addEmbed(embed)
-                                .addComponent(defaultStatsComponents(commandPrefix, dayspan))
-                                .build();
-                    }
-                }).subscribeOn(Schedulers.boundedElastic()))
+                    return fetchSpotifyDataParallel(username, dayspan)
+                            .map(embed -> InteractionFollowupCreateSpec.builder()
+                                    .addEmbed(embed)
+                                    .addComponent(defaultStatsComponents("spotify", dayspan))
+                                    .build());
+                }))
                 .flatMap(event::createFollowup).then();
     }
 
@@ -82,14 +73,7 @@ public class SpotifyCommand implements Command, ButtonHandler {
                     .build();
 
             return message.edit(loadingSpec)
-                    .then(Mono.fromCallable(() -> {
-                        try (Connection conn = new DBConnection().SQLDBConnection()) {
-                            StatsService service = new StatsService(conn);
-                            List<SpotifyStats> topSongs = service.getTopSongsForUser(username, dayspan);
-                            List<SpotifyStats> topArtists = service.getTopArtistsForUser(username, dayspan);
-                            return formatSpotifyStats(username, topSongs, topArtists, dayspan);
-                        }
-                    }).subscribeOn(Schedulers.boundedElastic()))
+                    .then(fetchSpotifyDataParallel(username, dayspan))
                     .flatMap(newEmbed -> {
                         var resultSpec = MessageEditSpec.builder()
                                 .embeds(List.of(newEmbed))
@@ -98,5 +82,24 @@ public class SpotifyCommand implements Command, ButtonHandler {
                         return message.edit(resultSpec);
                     });
         }).then();
+    }
+
+    private Mono<EmbedCreateSpec> fetchSpotifyDataParallel(String username, int dayspan) {
+        Mono<List<SpotifyStats>> songsMono = Mono.fromCallable(() -> {
+            try (Connection conn = new DBConnection().SQLDBConnection()) {
+                StatsService service = new StatsService(conn);
+                return service.getTopSongsForUser(username, dayspan);
+            }
+        }).subscribeOn(Schedulers.boundedElastic());
+
+        Mono<List<SpotifyStats>> artistsMono = Mono.fromCallable(() -> {
+            try (Connection conn = new DBConnection().SQLDBConnection()) {
+                StatsService service = new StatsService(conn);
+                return service.getTopArtistsForUser(username, dayspan);
+            }
+        }).subscribeOn(Schedulers.boundedElastic());
+
+        return Mono.zip(songsMono, artistsMono)
+                .map(tuple -> formatSpotifyStats(username, tuple.getT1(), tuple.getT2(), dayspan));
     }
 }
