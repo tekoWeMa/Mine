@@ -39,6 +39,9 @@ public class StatsCommand implements Command, ButtonHandler {
                                 .flatMap(opt -> opt.getValue().map(v -> v.asUser().block()))
                                 .orElse(null);
 
+                        User user = (targetUser != null) ? targetUser : commandUser;
+                        long userId = user.getId().asLong();
+
                         int dayspan = event.getOption("dayspan")
                                 .flatMap(opt -> opt.getValue())
                                 .map(v -> Integer.parseInt(v.getRaw()))
@@ -50,7 +53,7 @@ public class StatsCommand implements Command, ButtonHandler {
 
                         return InteractionFollowupCreateSpec.builder()
                                 .addEmbed(defaultStatsEmbed(stats, dayspan).get(0))
-                                .addComponent(defaultStatsComponents(commandPrefix, dayspan))
+                                .addComponent(defaultStatsComponents(commandPrefix, dayspan, userId))
                                 .build();
 
                     } catch (Exception e) {
@@ -70,29 +73,31 @@ public class StatsCommand implements Command, ButtonHandler {
 
     @Override
     public Mono<Void> handleButton(ButtonInteractionEvent event) {
-        int dayspan = Integer.parseInt(event.getCustomId().split("_")[2]);
+        String[] parts = event.getCustomId().split("_");
+        int dayspan = Integer.parseInt(parts[2]);
+        long userId = Long.parseLong(parts[4]);
 
         return Mono.justOrEmpty(event.getMessage()).flatMap(message -> {
             var embed = message.getEmbeds().get(0);
             var title = embed.getTitle().orElse("");
-            var requestedUsername = title.replace("Stats for ", "").trim();
+            var displayName = title.replace("Stats for ", "").trim();
 
             var loadingSpec = MessageEditSpec.builder()
                     .embeds(List.of(loadingEmbed()))
-                    .components(List.of(disabledStatsComponents("stats", dayspan)))
+                    .components(List.of(disabledStatsComponents("stats", dayspan, userId)))
                     .build();
 
             return message.edit(loadingSpec)
                     .then(Mono.fromCallable(() -> {
                         try (Connection conn = new DBConnection().SQLDBConnection()) {
                             StatsService service = new StatsService(conn);
-                            return service.getStats(requestedUsername, dayspan);
+                            return service.getStats(userId, displayName, dayspan);
                         }
                     }).subscribeOn(Schedulers.boundedElastic()))
                     .flatMap(stats -> {
                         var resultSpec = MessageEditSpec.builder()
                                 .embeds(defaultStatsEmbed(stats, dayspan))
-                                .components(List.of(defaultStatsComponents("stats", dayspan)))
+                                .components(List.of(defaultStatsComponents("stats", dayspan, userId)))
                                 .build();
                         return message.edit(resultSpec);
                     });

@@ -90,19 +90,19 @@ public class SharedFormatter {
         return specs;
     }
 
-    public static ActionRow defaultStatsComponents(String commandPrefix, int dayspan) {
+    public static ActionRow defaultStatsComponents(String commandPrefix, int dayspan, long userId) {
         return ActionRow.of(
-                styleButton(commandPrefix, 7, dayspan),
-                styleButton(commandPrefix, 14, dayspan),
-                styleButton(commandPrefix, 30, dayspan)
+                styleButton(commandPrefix, 7, dayspan, userId),
+                styleButton(commandPrefix, 14, dayspan, userId),
+                styleButton(commandPrefix, 30, dayspan, userId)
         );
     }
 
-    public static ActionRow disabledStatsComponents(String commandPrefix, int dayspan) {
+    public static ActionRow disabledStatsComponents(String commandPrefix, int dayspan, long userId) {
         return ActionRow.of(
-                styleButton(commandPrefix, 7, dayspan).disabled(),
-                styleButton(commandPrefix, 14, dayspan).disabled(),
-                styleButton(commandPrefix, 30, dayspan).disabled()
+                styleButton(commandPrefix, 7, dayspan, userId).disabled(),
+                styleButton(commandPrefix, 14, dayspan, userId).disabled(),
+                styleButton(commandPrefix, 30, dayspan, userId).disabled()
         );
     }
 
@@ -112,9 +112,9 @@ public class SharedFormatter {
                 .build();
     }
 
-    private static Button styleButton(String commandPrefix, int value, int selected) {
+    private static Button styleButton(String commandPrefix, int value, int selected, long userId) {
         String label = value + " Days";
-        String id = commandPrefix +"_dayspan_" + value;
+        String id = commandPrefix + "_dayspan_" + value + "_user_" + userId;
 
         return (value == selected)
                 ? Button.primary(id, label)

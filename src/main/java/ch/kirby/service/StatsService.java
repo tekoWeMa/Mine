@@ -19,12 +19,14 @@ public class StatsService {
     }
 
     public GameStats getStats(User commandUser, User target, int dayspan) throws Exception {
-        String username = (target != null) ? target.getUsername() : commandUser.getUsername();
-        return repo.getStatsForUser(username, dayspan);
+        User user = (target != null) ? target : commandUser;
+        long userId = user.getId().asLong();
+        String displayName = user.getUsername();
+        return repo.getStatsForUser(userId, displayName, dayspan);
     }
 
-    public GameStats getStats(String username, int dayspan) throws Exception {
-        return repo.getStatsForUser(username, dayspan);
+    public GameStats getStats(long userId, String displayName, int dayspan) throws Exception {
+        return repo.getStatsForUser(userId, displayName, dayspan);
     }
 
     public List<GameStats> getGameLeaderboard(String game, int dayspan) {
@@ -35,13 +37,11 @@ public class StatsService {
         return repo.fetchSpotifyLeaderboard(dayspan);
     }
 
-    public List<SpotifyStats> getTopSongsForUser(String username, int dayspan) {
-        return repo.getTopSongsForUser(username, dayspan);
+    public List<SpotifyStats> getTopSongsForUser(long userId, String displayName, int dayspan) {
+        return repo.getTopSongsForUser(userId, displayName, dayspan);
     }
 
-    public List<SpotifyStats> getTopArtistsForUser(String username, int dayspan) {
-        return repo.getTopArtistsForUser(username, dayspan);
+    public List<SpotifyStats> getTopArtistsForUser(long userId, String displayName, int dayspan) {
+        return repo.getTopArtistsForUser(userId, displayName, dayspan);
     }
-
-
 }

@@ -42,14 +42,14 @@ public class SpotifyCommand implements Command, ButtonHandler {
                             .map(v -> Integer.parseInt(v.getRaw()))
                             .orElse(7);
 
-                    String username = (targetUser != null)
-                            ? targetUser.getUsername()
-                            : commandUser.getUsername();
+                    User user = (targetUser != null) ? targetUser : commandUser;
+                    long userId = user.getId().asLong();
+                    String displayName = user.getUsername();
 
-                    return fetchSpotifyDataParallel(username, dayspan)
+                    return fetchSpotifyDataParallel(userId, displayName, dayspan)
                             .map(embed -> InteractionFollowupCreateSpec.builder()
                                     .addEmbed(embed)
-                                    .addComponent(defaultStatsComponents("spotify", dayspan))
+                                    .addComponent(defaultStatsComponents("spotify", dayspan, userId))
                                     .build());
                 }))
                 .flatMap(event::createFollowup).then();
@@ -62,46 +62,48 @@ public class SpotifyCommand implements Command, ButtonHandler {
 
     @Override
     public Mono<Void> handleButton(ButtonInteractionEvent event) {
-        int dayspan = Integer.parseInt(event.getCustomId().split("_")[2]);
+        String[] parts = event.getCustomId().split("_");
+        int dayspan = Integer.parseInt(parts[2]);
+        long userId = Long.parseLong(parts[4]);
 
         return Mono.justOrEmpty(event.getMessage()).flatMap(message -> {
             var embed = message.getEmbeds().get(0);
             var title = embed.getTitle().orElse("");
-            var username = title.replace("🎧 Spotify Stats for ", "");
+            var displayName = title.replace("🎧 Spotify Stats for ", "");
 
             var loadingSpec = MessageEditSpec.builder()
                     .embeds(List.of(loadingEmbed()))
-                    .components(List.of(disabledStatsComponents("spotify", dayspan)))
+                    .components(List.of(disabledStatsComponents("spotify", dayspan, userId)))
                     .build();
 
             return message.edit(loadingSpec)
-                    .then(fetchSpotifyDataParallel(username, dayspan))
+                    .then(fetchSpotifyDataParallel(userId, displayName, dayspan))
                     .flatMap(newEmbed -> {
                         var resultSpec = MessageEditSpec.builder()
                                 .embeds(List.of(newEmbed))
-                                .components(List.of(defaultStatsComponents("spotify", dayspan)))
+                                .components(List.of(defaultStatsComponents("spotify", dayspan, userId)))
                                 .build();
                         return message.edit(resultSpec);
                     });
         }).then();
     }
 
-    private Mono<EmbedCreateSpec> fetchSpotifyDataParallel(String username, int dayspan) {
+    private Mono<EmbedCreateSpec> fetchSpotifyDataParallel(long userId, String displayName, int dayspan) {
         Mono<List<SpotifyStats>> songsMono = Mono.fromCallable(() -> {
             try (Connection conn = new DBConnection().SQLDBConnection()) {
                 StatsService service = new StatsService(conn);
-                return service.getTopSongsForUser(username, dayspan);
+                return service.getTopSongsForUser(userId, displayName, dayspan);
             }
         }).subscribeOn(Schedulers.boundedElastic());
 
         Mono<List<SpotifyStats>> artistsMono = Mono.fromCallable(() -> {
             try (Connection conn = new DBConnection().SQLDBConnection()) {
                 StatsService service = new StatsService(conn);
-                return service.getTopArtistsForUser(username, dayspan);
+                return service.getTopArtistsForUser(userId, displayName, dayspan);
             }
         }).subscribeOn(Schedulers.boundedElastic());
 
         return Mono.zip(songsMono, artistsMono)
-                .map(tuple -> formatSpotifyStats(username, tuple.getT1(), tuple.getT2(), dayspan));
+                .map(tuple -> formatSpotifyStats(displayName, tuple.getT1(), tuple.getT2(), dayspan));
     }
 }

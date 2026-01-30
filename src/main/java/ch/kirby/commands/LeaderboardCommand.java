@@ -50,7 +50,7 @@ public class LeaderboardCommand implements Command, ButtonHandler {
                         EmbedCreateSpec embed = SharedFormatter.formatLeaderboard(leaderboard, game, dayspan);
                         return InteractionFollowupCreateSpec.builder()
                                 .addEmbed(embed)
-                                .addComponent(defaultStatsComponents(commandPrefix, dayspan))
+                                .addComponent(defaultStatsComponents(commandPrefix, dayspan, 0L))
                                 .build();
                     }
                 }).subscribeOn(Schedulers.boundedElastic()))
@@ -81,7 +81,7 @@ public class LeaderboardCommand implements Command, ButtonHandler {
 
             var loadingSpec = MessageEditSpec.builder()
                     .embeds(List.of(loadingEmbed()))
-                    .components(List.of(disabledStatsComponents("leaderboard", dayspan)))
+                    .components(List.of(disabledStatsComponents("leaderboard", dayspan, 0L)))
                     .build();
 
             return message.edit(loadingSpec)
@@ -97,7 +97,7 @@ public class LeaderboardCommand implements Command, ButtonHandler {
                         EmbedCreateSpec newEmbed = formatLeaderboard(leaderboard, game, dayspan);
                         var resultSpec = MessageEditSpec.builder()
                                 .embeds(List.of(newEmbed))
-                                .components(List.of(defaultStatsComponents("leaderboard", dayspan)))
+                                .components(List.of(defaultStatsComponents("leaderboard", dayspan, 0L)))
                                 .build();
                         return message.edit(resultSpec);
                     });

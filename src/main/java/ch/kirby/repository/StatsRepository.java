@@ -20,10 +20,9 @@ public class StatsRepository implements AutoCloseable {
         this.connection = connection;
     }
 
-    public GameStats getStatsForUser(String username, int dayspan) throws SQLException {
+    public GameStats getStatsForUser(long userId, String displayName, int dayspan) throws SQLException {
         String sql = """
             SELECT
-                U.username,
                 App.name,
                 ROUND(SUM(TIMESTAMPDIFF(SECOND, A.starttime, COALESCE(A.endtime, NOW()))) / 3600, 2) AS total_hours_played
             FROM
@@ -37,16 +36,16 @@ public class StatsRepository implements AutoCloseable {
             WHERE
                 T.type = 'playing'
                 AND A.starttime >= NOW() - INTERVAL ? DAY
-                AND U.username = ?
+                AND U.user_id = ?
             GROUP BY
-                U.username, App.name
+                App.name
             ORDER BY
                 total_hours_played DESC
         """;
 
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, dayspan);
-            ps.setString(2, username);
+            ps.setLong(2, userId);
 
             try (ResultSet rs = ps.executeQuery()) {
                 Map<String, Double> breakdown = new LinkedHashMap<>();
@@ -57,7 +56,7 @@ public class StatsRepository implements AutoCloseable {
                     breakdown.put(game, hours);
                     total += hours;
                 }
-                return new GameStats(username, total, breakdown);
+                return new GameStats(displayName, total, breakdown);
             }
         }
     }
@@ -153,12 +152,11 @@ public class StatsRepository implements AutoCloseable {
         return results;
     }
 
-    public List<SpotifyStats> getTopSongsForUser(String username, int dayspan) {
+    public List<SpotifyStats> getTopSongsForUser(long userId, String displayName, int dayspan) {
         List<SpotifyStats> results = new ArrayList<>();
 
         String sql = """
         SELECT
-            U.username,
             AppS.details,
             ROUND(SUM(TIMESTAMPDIFF(SECOND, A.starttime, COALESCE(A.endtime, NOW()))) / 60, 2) AS total_minutes_played
         FROM
@@ -171,10 +169,10 @@ public class StatsRepository implements AutoCloseable {
             T.type = 'listening'
             AND A.endtime IS NOT NULL
             AND A.starttime >= NOW() - INTERVAL ? DAY
-            AND U.username = ?
+            AND U.user_id = ?
             AND App.name = 'Spotify'
         GROUP BY
-            AppS.details, U.username
+            AppS.details
         ORDER BY
             total_minutes_played DESC
         LIMIT 10;
@@ -182,12 +180,12 @@ public class StatsRepository implements AutoCloseable {
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, dayspan);
-            stmt.setString(2, username);
+            stmt.setLong(2, userId);
 
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
                 results.add(new SpotifyStats(
-                        rs.getString("username"),
+                        displayName,
                         rs.getString("details"),
                         rs.getDouble("total_minutes_played")
                 ));
@@ -199,12 +197,11 @@ public class StatsRepository implements AutoCloseable {
         return results;
     }
 
-    public List<SpotifyStats> getTopArtistsForUser(String username, int dayspan) {
+    public List<SpotifyStats> getTopArtistsForUser(long userId, String displayName, int dayspan) {
         List<SpotifyStats> results = new ArrayList<>();
 
         String sql = """
         SELECT
-            U.username,
             AppS.state,
             ROUND(SUM(TIMESTAMPDIFF(SECOND, A.starttime, COALESCE(A.endtime, NOW()))) / 60, 2) AS total_minutes_played
         FROM
@@ -217,10 +214,10 @@ public class StatsRepository implements AutoCloseable {
             T.type = 'listening'
             AND A.endtime IS NOT NULL
             AND A.starttime >= NOW() - INTERVAL ? DAY
-            AND U.username = ?
+            AND U.user_id = ?
             AND App.name = 'Spotify'
         GROUP BY
-            AppS.state, U.username
+            AppS.state
         ORDER BY
             total_minutes_played DESC
         LIMIT 10;
@@ -228,12 +225,12 @@ public class StatsRepository implements AutoCloseable {
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, dayspan);
-            stmt.setString(2, username);
+            stmt.setLong(2, userId);
 
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
                 results.add(new SpotifyStats(
-                        rs.getString("username"),
+                        displayName,
                         rs.getString("state"),
                         rs.getDouble("total_minutes_played")
                 ));
