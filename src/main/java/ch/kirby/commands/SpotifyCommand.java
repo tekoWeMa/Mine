@@ -4,6 +4,7 @@ import ch.kirby.SQL.DBConnection;
 import ch.kirby.core.command.ButtonHandler;
 import ch.kirby.core.command.Command;
 import ch.kirby.model.SpotifyStats;
+import ch.kirby.presence.CommandUsageTracker;
 import ch.kirby.service.StatsService;
 import discord4j.core.event.domain.interaction.ButtonInteractionEvent;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
@@ -28,6 +29,7 @@ public class SpotifyCommand implements Command, ButtonHandler {
 
     @Override
     public Mono<Void> handle(ChatInputInteractionEvent event) {
+        CommandUsageTracker.getInstance().incrementStats();
         return event.deferReply()
                 .then(Mono.defer(() -> {
                     User commandUser = event.getInteraction().getUser();

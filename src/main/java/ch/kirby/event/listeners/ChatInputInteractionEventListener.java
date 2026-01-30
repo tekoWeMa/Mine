@@ -4,7 +4,9 @@ import ch.kirby.commands.LeaderboardCommand;
 import ch.kirby.commands.PingCommand;
 import ch.kirby.commands.SpotifyCommand;
 import ch.kirby.commands.StatsCommand;
+import ch.kirby.commands.StatusCommand;
 import ch.kirby.core.command.Command;
+import ch.kirby.presence.BotPresenceManager;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -14,13 +16,15 @@ import java.util.List;
 
 public class ChatInputInteractionEventListener {
 
-    private final static List<Command> commands = new ArrayList<>();
+    private static final List<Command> commands = new ArrayList<>();
 
-    static {
+    public static void initialize(BotPresenceManager presenceManager) {
+        commands.clear();
         commands.add(new PingCommand());
         commands.add(new StatsCommand());
         commands.add(new LeaderboardCommand());
         commands.add(new SpotifyCommand());
+        commands.add(new StatusCommand(presenceManager));
     }
 
     public static Mono<Void> handle(ChatInputInteractionEvent event) {

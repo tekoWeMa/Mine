@@ -3,6 +3,7 @@ package ch.kirby.commands;
 import ch.kirby.SQL.DBConnection;
 import ch.kirby.core.command.ButtonHandler;
 import ch.kirby.model.GameStats;
+import ch.kirby.presence.CommandUsageTracker;
 import ch.kirby.service.StatsService;
 import ch.kirby.core.command.Command;
 import discord4j.core.event.domain.interaction.ButtonInteractionEvent;
@@ -29,6 +30,7 @@ public class StatsCommand implements Command, ButtonHandler {
 
     @Override
     public Mono<Void> handle(ChatInputInteractionEvent event) {
+        CommandUsageTracker.getInstance().incrementStats();
         return event.deferReply()
                 .then(Mono.fromCallable(() -> {
                     try (Connection conn = new DBConnection().SQLDBConnection()) {

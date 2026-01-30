@@ -3,6 +3,7 @@ package ch.kirby;
 import ch.kirby.event.listeners.ButtonInteractionEventListener;
 import ch.kirby.event.listeners.ChatInputInteractionEventListener;
 import ch.kirby.event.listeners.MessageCreateEventListener;
+import ch.kirby.presence.BotPresenceManager;
 import discord4j.core.DiscordClientBuilder;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.interaction.ButtonInteractionEvent;
@@ -10,7 +11,6 @@ import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.util.List;
@@ -22,11 +22,16 @@ public class Mine {
         final var token = System.getenv("DISCORD_CLIENT_TOKEN_MINE");
         final GatewayDiscordClient client = DiscordClientBuilder.create(token).build().login().block();
 
+        BotPresenceManager presenceManager = new BotPresenceManager(client);
+        presenceManager.start();
+        ChatInputInteractionEventListener.initialize(presenceManager);
+
         List<String> commands = List.of(
                 "ping.json",
                 "stats.json",
                 "leaderboard.json",
-                "spotify.json");
+                "spotify.json",
+                "status.json");
         try {
             new GlobalCommandRegistrar(client.getRestClient()).registerCommands(commands);
         }
@@ -46,8 +51,6 @@ public class Mine {
         client.on(ButtonInteractionEvent.class, ButtonInteractionEventListener::handle)
                 .then(client.onDisconnect())
                 .subscribe();
-
-
 
         client.onDisconnect().block();
     }

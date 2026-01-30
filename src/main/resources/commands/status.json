@@ -1,0 +1,61 @@
+{
+  "name": "status",
+  "description": "Manage bot presence status",
+  "default_member_permissions": "0",
+  "options": [
+    {
+      "name": "rotate",
+      "description": "Enable rotating status (default behavior)",
+      "type": 1
+    },
+    {
+      "name": "preset",
+      "description": "Set a predefined status",
+      "type": 1,
+      "options": [
+        {
+          "name": "name",
+          "description": "Preset name",
+          "type": 3,
+          "required": true,
+          "choices": [
+            {"name": "leaderboards - Playing preparing the Leaderboards", "value": "leaderboards"},
+            {"name": "gooning - Playing Gooning", "value": "gooning"},
+            {"name": "help - Playing /stats /spotify", "value": "help"},
+            {"name": "tracked - Watching X stats checked today", "value": "tracked"}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "custom",
+      "description": "Set a custom status",
+      "type": 1,
+      "options": [
+        {
+          "name": "type",
+          "description": "Activity type",
+          "type": 3,
+          "required": true,
+          "choices": [
+            {"name": "Playing", "value": "playing"},
+            {"name": "Listening to", "value": "listening"},
+            {"name": "Watching", "value": "watching"},
+            {"name": "Competing in", "value": "competing"}
+          ]
+        },
+        {
+          "name": "text",
+          "description": "Status text",
+          "type": 3,
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "show",
+      "description": "Show current status mode",
+      "type": 1
+    }
+  ]
+}
