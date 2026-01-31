@@ -67,6 +67,7 @@ services:
       - DB_HOST_MINE
       - DB_USERNAME_MINE
       - DB_PASSWORD_MINE
+      - BOT_OWNER_ID
     restart: unless-stopped
 ```
 
