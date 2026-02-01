@@ -28,11 +28,24 @@ public class SharedFormatter {
     }
 
     public static EmbedCreateSpec formatLeaderboard(List<GameStats> stats, String game, int dayspan) {
-        String title = (game == null)
-                ? "🏆 Global Game Leaderboard"
-                : ("spotify".equalsIgnoreCase(game)
-                ? "🎧 Spotify Listener Leaderboard"
-                : "🎮 Leaderboard for " + game);
+        return formatLeaderboard(stats, game, dayspan, false, null);
+    }
+
+    public static EmbedCreateSpec formatLeaderboard(List<GameStats> stats, String game, int dayspan, boolean serverScoped, String serverName) {
+        String title;
+        if (serverScoped) {
+            title = (game == null)
+                    ? "🏆 Server Game Leaderboard"
+                    : ("spotify".equalsIgnoreCase(game)
+                    ? "🎧 Server Spotify Leaderboard"
+                    : "🎮 Server Leaderboard for " + game);
+        } else {
+            title = (game == null)
+                    ? "🏆 Global Game Leaderboard"
+                    : ("spotify".equalsIgnoreCase(game)
+                    ? "🎧 Spotify Listener Leaderboard"
+                    : "🎮 Leaderboard for " + game);
+        }
 
         StringBuilder description = new StringBuilder();
         int rank = 1;
@@ -43,11 +56,21 @@ public class SharedFormatter {
             ));
         }
 
-        return EmbedCreateSpec.builder()
+        if (stats.isEmpty()) {
+            description.append("No data found for this server.");
+        }
+
+        var builder = EmbedCreateSpec.builder()
                 .title(title)
-                .description(description.toString())
-                .footer("Timespan: " + dayspan + " days", null)
-                .build();
+                .description(description.toString());
+
+        String footer = "Timespan: " + dayspan + " days";
+        if (serverScoped && serverName != null) {
+            footer = serverName + " | " + footer;
+        }
+        builder.footer(footer, null);
+
+        return builder.build();
     }
 
     public static EmbedCreateSpec formatSpotifyStats(String username, List<SpotifyStats> songs, List<SpotifyStats> artists, int dayspan) {

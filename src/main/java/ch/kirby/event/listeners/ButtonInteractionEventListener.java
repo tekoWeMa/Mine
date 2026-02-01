@@ -1,6 +1,7 @@
 package ch.kirby.event.listeners;
 
 import ch.kirby.commands.LeaderboardCommand;
+import ch.kirby.commands.ServerLeaderboardCommand;
 import ch.kirby.commands.SpotifyCommand;
 import ch.kirby.commands.StatsCommand;
 import ch.kirby.core.command.ButtonHandler;
@@ -18,6 +19,7 @@ public class ButtonInteractionEventListener {
     private static final Map<String, ButtonHandler> handlers = List.of(
             new StatsCommand(),
             new LeaderboardCommand(),
+            new ServerLeaderboardCommand(),
             new SpotifyCommand()
     ).stream().collect(Collectors.toMap(ButtonHandler::getCommandPrefix, Function.identity()));
 

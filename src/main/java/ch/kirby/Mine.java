@@ -30,6 +30,7 @@ public class Mine {
                 "ping.json",
                 "stats.json",
                 "leaderboard.json",
+                "serverleaderboard.json",
                 "spotify.json",
                 "status.json");
         try {

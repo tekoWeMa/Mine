@@ -2,6 +2,7 @@ package ch.kirby.event.listeners;
 
 import ch.kirby.commands.LeaderboardCommand;
 import ch.kirby.commands.PingCommand;
+import ch.kirby.commands.ServerLeaderboardCommand;
 import ch.kirby.commands.SpotifyCommand;
 import ch.kirby.commands.StatsCommand;
 import ch.kirby.commands.StatusCommand;
@@ -23,6 +24,7 @@ public class ChatInputInteractionEventListener {
         commands.add(new PingCommand());
         commands.add(new StatsCommand());
         commands.add(new LeaderboardCommand());
+        commands.add(new ServerLeaderboardCommand());
         commands.add(new SpotifyCommand());
         commands.add(new StatusCommand(presenceManager));
     }

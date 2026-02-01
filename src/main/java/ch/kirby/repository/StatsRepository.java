@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 
 public class StatsRepository implements AutoCloseable {
@@ -111,6 +113,112 @@ public class StatsRepository implements AutoCloseable {
         return results;
     }
 
+
+    public List<GameStats> fetchServerGameLeaderboard(Set<Long> memberIds, String game, int dayspan) {
+        List<GameStats> results = new ArrayList<>();
+        if (memberIds.isEmpty()) return results;
+
+        String placeholders = memberIds.stream().map(id -> "?").collect(Collectors.joining(", "));
+
+        StringBuilder sql = new StringBuilder("""
+        SELECT
+            U.username,
+            App.name,
+            ROUND(SUM(TIMESTAMPDIFF(SECOND, A.starttime, COALESCE(A.endtime, NOW()))) / 3600, 2) AS total_hours_played
+        FROM
+            Activity A
+        JOIN User U ON A.auto_user_id = U.auto_user_id
+        JOIN Type T ON A.auto_type_id = T.auto_type_id
+        JOIN Application App ON A.auto_app_id = App.auto_app_id
+        WHERE
+            T.type = 'playing'
+            AND A.starttime >= NOW() - INTERVAL ? DAY
+            AND U.user_id IN (%s)
+    """.formatted(placeholders));
+
+        boolean hasGame = game != null && !game.isEmpty();
+        if (hasGame) {
+            sql.append(" AND App.name = ?");
+        }
+
+        sql.append("""
+        GROUP BY U.username, App.name
+        ORDER BY total_hours_played DESC
+        LIMIT 10;
+    """);
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql.toString())) {
+            int paramIndex = 1;
+            stmt.setInt(paramIndex++, dayspan);
+            for (Long memberId : memberIds) {
+                stmt.setLong(paramIndex++, memberId);
+            }
+            if (hasGame) {
+                stmt.setString(paramIndex, game);
+            }
+
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                results.add(new GameStats(
+                        rs.getString("username"),
+                        rs.getString("name"),
+                        rs.getDouble("total_hours_played")
+                ));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return results;
+    }
+
+    public List<GameStats> fetchServerSpotifyLeaderboard(Set<Long> memberIds, int dayspan) {
+        List<GameStats> results = new ArrayList<>();
+        if (memberIds.isEmpty()) return results;
+
+        String placeholders = memberIds.stream().map(id -> "?").collect(Collectors.joining(", "));
+
+        String sql = """
+        SELECT
+            U.username,
+            App.name,
+            ROUND(SUM(TIMESTAMPDIFF(SECOND, A.starttime, COALESCE(A.endtime, NOW()))) / 3600, 2) AS total_hours_played
+        FROM
+            Activity A
+        JOIN User U ON A.auto_user_id = U.auto_user_id
+        JOIN Type T ON A.auto_type_id = T.auto_type_id
+        JOIN Application App ON A.auto_app_id = App.auto_app_id
+        WHERE
+            T.type = 'listening'
+            AND A.starttime >= NOW() - INTERVAL ? DAY
+            AND App.name = 'Spotify'
+            AND U.user_id IN (%s)
+        GROUP BY U.username, App.name
+        ORDER BY total_hours_played DESC
+        LIMIT 10;
+    """.formatted(placeholders);
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            int paramIndex = 1;
+            stmt.setInt(paramIndex++, dayspan);
+            for (Long memberId : memberIds) {
+                stmt.setLong(paramIndex++, memberId);
+            }
+
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                results.add(new GameStats(
+                        rs.getString("username"),
+                        rs.getString("name"),
+                        rs.getDouble("total_hours_played")
+                ));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return results;
+    }
 
     public List<GameStats> fetchSpotifyLeaderboard(int dayspan) {
         List<GameStats> results = new ArrayList<>();
