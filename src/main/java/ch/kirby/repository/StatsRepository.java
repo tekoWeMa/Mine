@@ -355,6 +355,35 @@ public class StatsRepository implements AutoCloseable {
 
 
 
+    public List<String> searchGameNames(String prefix, int limit) {
+        List<String> results = new ArrayList<>();
+
+        String sql = """
+            SELECT DISTINCT App.name
+            FROM Application App
+            JOIN Activity A ON App.auto_app_id = A.auto_app_id
+            JOIN Type T ON A.auto_type_id = T.auto_type_id
+            WHERE T.type = 'playing'
+              AND App.name LIKE ?
+            ORDER BY App.name
+            LIMIT ?
+        """;
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, prefix + "%");
+            stmt.setInt(2, limit);
+
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                results.add(rs.getString("name"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return results;
+    }
+
     @Override
     public void close() {}
 }

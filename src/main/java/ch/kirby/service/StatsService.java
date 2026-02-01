@@ -53,4 +53,8 @@ public class StatsService {
     public List<GameStats> getServerSpotifyLeaderboard(Set<Long> memberIds, int dayspan) {
         return repo.fetchServerSpotifyLeaderboard(memberIds, dayspan);
     }
+
+    public List<String> searchGameNames(String prefix, int limit) {
+        return repo.searchGameNames(prefix, limit);
+    }
 }

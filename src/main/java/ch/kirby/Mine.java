@@ -1,5 +1,6 @@
 package ch.kirby;
 
+import ch.kirby.event.listeners.AutocompleteEventListener;
 import ch.kirby.event.listeners.ButtonInteractionEventListener;
 import ch.kirby.event.listeners.ChatInputInteractionEventListener;
 import ch.kirby.event.listeners.MessageCreateEventListener;
@@ -7,6 +8,7 @@ import ch.kirby.presence.BotPresenceManager;
 import discord4j.core.DiscordClientBuilder;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.interaction.ButtonInteractionEvent;
+import discord4j.core.event.domain.interaction.ChatInputAutoCompleteEvent;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import org.slf4j.Logger;
@@ -45,6 +47,8 @@ public class Mine {
 
         client.on(ChatInputInteractionEvent.class, ChatInputInteractionEventListener::handle)
                 .then(client.onDisconnect())
+                .subscribe();
+        client.on(ChatInputAutoCompleteEvent.class, AutocompleteEventListener::handle)
                 .subscribe();
         client.on(MessageCreateEvent.class, MessageCreateEventListener::handle)
                 .then(client.onDisconnect())
