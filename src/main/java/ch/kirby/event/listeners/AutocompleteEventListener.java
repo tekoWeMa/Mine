@@ -1,13 +1,10 @@
 package ch.kirby.event.listeners;
 
-import ch.kirby.SQL.DBConnection;
-import ch.kirby.service.StatsService;
+import ch.kirby.cache.GameNameCache;
 import discord4j.core.event.domain.interaction.ChatInputAutoCompleteEvent;
 import discord4j.discordjson.json.ApplicationCommandOptionChoiceData;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
-import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -30,26 +27,21 @@ public class AutocompleteEventListener {
                 .map(v -> v.asString())
                 .orElse("");
 
-        return Mono.fromCallable(() -> {
-            try (Connection conn = new DBConnection().SQLDBConnection()) {
-                StatsService service = new StatsService(conn);
-                List<String> games = service.searchGameNames(typed, 24);
+        List<String> games = GameNameCache.getInstance().search(typed, 24);
+        List<ApplicationCommandOptionChoiceData> suggestions = new ArrayList<>();
 
-                List<ApplicationCommandOptionChoiceData> suggestions = new ArrayList<>();
+        if ("spotify".startsWith(typed.toLowerCase()) || typed.isEmpty()) {
+            suggestions.add(ApplicationCommandOptionChoiceData.builder()
+                    .name("spotify").value("spotify").build());
+        }
 
-                if ("spotify".startsWith(typed.toLowerCase()) || typed.isEmpty()) {
-                    suggestions.add(ApplicationCommandOptionChoiceData.builder()
-                            .name("spotify").value("spotify").build());
-                }
+        for (String game : games) {
+            suggestions.add(ApplicationCommandOptionChoiceData.builder()
+                    .name(game).value(game).build());
+        }
 
-                for (String game : games) {
-                    suggestions.add(ApplicationCommandOptionChoiceData.builder()
-                            .name(game).value(game).build());
-                }
-
-                return suggestions;
-            }
-        }).subscribeOn(Schedulers.boundedElastic())
-          .flatMap(event::respondWithSuggestions);
+        return event.respondWithSuggestions(suggestions)
+                .onErrorResume(e -> e.getMessage() != null && e.getMessage().contains("Unknown interaction"),
+                        e -> Mono.empty());
     }
 }

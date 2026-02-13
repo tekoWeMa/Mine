@@ -1,5 +1,6 @@
 package ch.kirby;
 
+import ch.kirby.cache.GameNameCache;
 import ch.kirby.event.listeners.AutocompleteEventListener;
 import ch.kirby.event.listeners.ButtonInteractionEventListener;
 import ch.kirby.event.listeners.ChatInputInteractionEventListener;
@@ -7,6 +8,8 @@ import ch.kirby.event.listeners.MessageCreateEventListener;
 import ch.kirby.presence.BotPresenceManager;
 import discord4j.core.DiscordClientBuilder;
 import discord4j.core.GatewayDiscordClient;
+import discord4j.gateway.intent.IntentSet;
+import discord4j.gateway.intent.Intent;
 import discord4j.core.event.domain.interaction.ButtonInteractionEvent;
 import discord4j.core.event.domain.interaction.ChatInputAutoCompleteEvent;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
@@ -22,11 +25,17 @@ public class Mine {
     private static final Logger LOGGER = LoggerFactory.getLogger(Mine.class);
     public static void main(final String[] args) {
         final var token = System.getenv("DISCORD_CLIENT_TOKEN_MINE");
-        final GatewayDiscordClient client = DiscordClientBuilder.create(token).build().login().block();
+        final GatewayDiscordClient client = DiscordClientBuilder.create(token).build()
+                .gateway()
+                .setEnabledIntents(IntentSet.nonPrivileged().or(IntentSet.of(Intent.GUILD_MEMBERS)))
+                .login()
+                .block();
 
         BotPresenceManager presenceManager = new BotPresenceManager(client);
         presenceManager.start();
         ChatInputInteractionEventListener.initialize(presenceManager);
+
+        GameNameCache.getInstance().start();
 
         List<String> commands = List.of(
                 "ping.json",
