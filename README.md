@@ -103,6 +103,11 @@ CREATE INDEX idx_activity_playing_lookup ON Activity (
     auto_app_id,
     starttime
 );
+
+-- Composite index for unfiltered total-hours aggregations (no type filter)
+-- Required when querying SUM(hours) grouped by app+user without a WHERE on auto_type_id,
+-- since idx_activity_playing_lookup won't be used (leading column not in WHERE)
+CREATE INDEX idx_activity_app_user ON Activity (auto_app_id, auto_user_id);
 ```
 
 ### Lookup Table Indexes (Optional)
@@ -118,6 +123,12 @@ CREATE INDEX idx_type_type ON Type (type);
 
 -- Application table: for app name lookups ('Spotify', game names)
 CREATE INDEX idx_application_name ON Application (name);
+```
+
+### AppState Lookup Index (Required)
+
+```sql
+CREATE INDEX idx_appstate_lookup ON AppState (state(128), details(128));
 ```
 
 ### Viewing Existing Indexes
